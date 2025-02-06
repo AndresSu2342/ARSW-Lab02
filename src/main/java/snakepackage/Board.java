@@ -28,47 +28,46 @@ public class Board extends JLabel implements Observer {
 	static Cell[] turbo_boosts = new Cell[NR_TURBO_BOOSTS];
 	static int[] result = new int[SnakeApp.MAX_THREADS];
 	Random random = new Random();
-	static Cell[][] gameboard = new Cell[GridSize.GRID_WIDTH][GridSize.GRID_HEIGHT];
+	static final Cell[][] gameboard = new Cell[GridSize.GRID_WIDTH][GridSize.GRID_HEIGHT];
 
 	@SuppressWarnings("unused")
 	public Board() {
 		if ((NR_BARRIERS + NR_JUMP_PADS + NR_FOOD + NR_TURBO_BOOSTS) > GridSize.GRID_HEIGHT
 				* GridSize.GRID_WIDTH)
-			throw new IllegalArgumentException(); 
-		GenerateBoard();
-		GenerateFood();
-		GenerateBarriers();
-		GenerateJumpPads();
-		GenerateTurboBoosts();
-	}
+			throw new IllegalArgumentException();
 
-	private void GenerateTurboBoosts() {
-		for (int i = 0; i != NR_TURBO_BOOSTS; i++) {
-			Cell tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random
-					.nextInt(GridSize.GRID_HEIGHT)];
-			if (!tmp.hasElements()) {
-				turbo_boosts[i] = tmp;
-				turbo_boosts[i].setTurbo_boost(true);
-			} else {
-				i--;
-			}
+		synchronized (gameboard){
+			GenerateBoard();
+			GenerateFood();
+			GenerateBarriers();
+			GenerateJumpPads();
+			GenerateTurboBoosts();
 		}
 	}
 
-	private void GenerateJumpPads() {
-		for (int i = 0; i != NR_JUMP_PADS; i++) {
-			Cell tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random
-					.nextInt(GridSize.GRID_HEIGHT)];
-			if (!tmp.hasElements()) {
-				jump_pads[i] = tmp;
-				jump_pads[i].setJump_pad(true);
-			} else {
-				i--;
-			}
+	private synchronized void GenerateTurboBoosts() {
+		for (int i = 0; i < NR_TURBO_BOOSTS; i++) {
+			Cell tmp;
+			do {
+				tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random.nextInt(GridSize.GRID_HEIGHT)];
+			} while (tmp.hasElements());
+			turbo_boosts[i] = tmp;
+			turbo_boosts[i].setTurbo_boost(true);
 		}
 	}
 
-	private void GenerateBoard() {
+	private synchronized void GenerateJumpPads() {
+		for (int i = 0; i < NR_JUMP_PADS; i++) {
+			Cell tmp;
+			do {
+				tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random.nextInt(GridSize.GRID_HEIGHT)];
+			} while (tmp.hasElements());
+			jump_pads[i] = tmp;
+			jump_pads[i].setJump_pad(true);
+		}
+	}
+
+	private synchronized void GenerateBoard() {
 		for (int i = 0; i != GridSize.GRID_WIDTH; i++) {
 			for (int j = 0; j != GridSize.GRID_HEIGHT; j++) {
 				gameboard[i][j] = new Cell(i, j);
@@ -78,41 +77,39 @@ public class Board extends JLabel implements Observer {
 
 	}
 
-	private void GenerateBarriers() {
-		for (int i = 0; i != NR_BARRIERS; i++) {
-			Cell tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random
-					.nextInt(GridSize.GRID_HEIGHT)];
-			if (!tmp.hasElements()) {
-				barriers[i] = tmp;
-				barriers[i].setBarrier(true);
-			} else {
-				i--;
-			}
+	private synchronized void GenerateBarriers() {
+		for (int i = 0; i < NR_BARRIERS; i++) {
+			Cell tmp;
+			do {
+				tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random.nextInt(GridSize.GRID_HEIGHT)];
+			} while (tmp.hasElements());
+			barriers[i] = tmp;
+			barriers[i].setBarrier(true);
 		}
 	}
 
-	private void GenerateFood() {
-		for (int i = 0; i != NR_FOOD; i++) {
-			Cell tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random
-					.nextInt(GridSize.GRID_HEIGHT)];
-			if (!tmp.hasElements()) {
-				food[i] = tmp;
-				food[i].setFood(true);
-			} else {
-				i--;
-			}
+	private synchronized void GenerateFood() {
+		for (int i = 0; i < NR_FOOD; i++) {
+			Cell tmp;
+			do {
+				tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random.nextInt(GridSize.GRID_HEIGHT)];
+			} while (tmp.hasElements());
+			food[i] = tmp;
+			food[i].setFood(true);
 		}
 	}
 
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 
-		drawGrid(g);
-		drawSnake(g);
-		drawFood(g);
-		drawBarriers(g);
-		drawJumpPads(g);
-		drawTurboBoosts(g);
+		synchronized (gameboard){
+			drawGrid(g);
+			drawSnake(g);
+			drawFood(g);
+			drawBarriers(g);
+			drawJumpPads(g);
+			drawTurboBoosts(g);
+		}
 	}
 
 	private void drawTurboBoosts(Graphics g) {

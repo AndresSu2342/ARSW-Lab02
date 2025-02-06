@@ -27,6 +27,8 @@ public class Snake extends Observable implements Runnable {
     private int growing = 0;
     public boolean goal = false;
 
+    private final Object lock = new Object(); // Objeto de que usamos para la sincronización en run()
+
     public Snake(int idt, Cell head, int direction) {
         this.idt = idt;
         this.direction = direction;
@@ -48,21 +50,25 @@ public class Snake extends Observable implements Runnable {
     @Override
     public void run() {
         while (!snakeEnd) {
-            
-            snakeCalc();
 
-            //NOTIFY CHANGES TO GUI
-            setChanged();
-            notifyObservers();
+            synchronized (lock){
+                snakeCalc();
 
-            try {
-                if (hasTurbo == true) {
-                    Thread.sleep(500 / 3);
-                } else {
-                    Thread.sleep(500);
+                //NOTIFY CHANGES TO GUI
+                setChanged();
+                notifyObservers();
+
+                try {
+                    if (hasTurbo) {
+                        lock.wait(500 / 3);
+                        //Thread.sleep(500 / 3);
+                    } else {
+                        lock.wait(500);
+                        //Thread.sleep(500);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
 
         }
@@ -72,11 +78,20 @@ public class Snake extends Observable implements Runnable {
         
     }
 
-    private void snakeCalc() {
+
+    // este metodo nos podria ayudar para REANUDAR el juego
+    /*
+    public void resumeSnake() {
+        synchronized (lock) {
+            lock.notify(); // Notifica al hilo de la serpiente para que continúe
+        }
+    }
+     */
+
+    private synchronized void snakeCalc() {
         head = snakeBody.peekFirst();
 
         newCell = head;
-
         newCell = changeDirection(newCell);
         
         randomMovement(newCell);
@@ -89,10 +104,11 @@ public class Snake extends Observable implements Runnable {
         snakeBody.push(newCell);
 
         if (growing <= 0) {
-            newCell = snakeBody.peekLast();
-            snakeBody.remove(snakeBody.peekLast());
-            Board.gameboard[newCell.getX()][newCell.getY()].freeCell();
-        } else if (growing != 0) {
+            Cell lastCell = snakeBody.pollLast(); // nuevo código
+            if(lastCell != null){
+                Board.gameboard[lastCell.getX()][lastCell.getY()].freeCell();
+            }
+        } else  {
             growing--;
         }
 
