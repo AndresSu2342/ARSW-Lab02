@@ -45,4 +45,10 @@
 
    - Se agregó la opción de Iniciar/Pausar/Reanudar el juego mediante botones en la interfaz.
 
+![Image](https://github.com/user-attachments/assets/eeb075a9-f26a-4d7b-869b-e00329aec1d0)
+
+![Image](https://github.com/user-attachments/assets/1b1d7a4d-7b2f-4552-8b18-0b6cafb1a90b)   
+
    - Se mostró información sobre la serpiente más larga y la primera en morir al pausar el juego.
+
+![Image](https://github.com/user-attachments/assets/8dbd56a7-e233-4329-95b0-f9bc7f722e70)

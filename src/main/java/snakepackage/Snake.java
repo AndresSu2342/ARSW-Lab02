@@ -78,15 +78,21 @@ public class Snake extends Observable implements Runnable {
         
     }
 
-
-    // este metodo nos podria ayudar para REANUDAR el juego
-    /*
     public void resumeSnake() {
         synchronized (lock) {
             lock.notify(); // Notifica al hilo de la serpiente para que continúe
         }
     }
-     */
+
+    public void pauseSnake() {
+        synchronized (lock) {
+            try {
+                lock.wait(); // Pausa la ejecución del hilo de la serpiente
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 
     private synchronized void snakeCalc() {
         head = snakeBody.peekFirst();
