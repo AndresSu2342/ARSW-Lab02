@@ -5,15 +5,18 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Random;
+import java.util.*;
 
 import javax.imageio.ImageIO;
-import javax.swing.JLabel;
+import javax.swing.*;
 
 import enums.GridSize;
 import java.io.InputStream;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import javax.swing.JButton;
+import javax.swing.JPanel;
 
 public class Board extends JLabel implements Observer {
 
@@ -28,47 +31,51 @@ public class Board extends JLabel implements Observer {
 	static Cell[] turbo_boosts = new Cell[NR_TURBO_BOOSTS];
 	static int[] result = new int[SnakeApp.MAX_THREADS];
 	Random random = new Random();
-	static Cell[][] gameboard = new Cell[GridSize.GRID_WIDTH][GridSize.GRID_HEIGHT];
+	static final Cell[][] gameboard = new Cell[GridSize.GRID_WIDTH][GridSize.GRID_HEIGHT];
+
+	private boolean isPaused = false;
+	private boolean gameRunning = false;
+	private List<Snake> snakes = new ArrayList<>();
+	private JButton startButton, pauseButton, resumeButton;
 
 	@SuppressWarnings("unused")
 	public Board() {
-		if ((NR_BARRIERS + NR_JUMP_PADS + NR_FOOD + NR_TURBO_BOOSTS) > GridSize.GRID_HEIGHT
-				* GridSize.GRID_WIDTH)
-			throw new IllegalArgumentException(); 
-		GenerateBoard();
-		GenerateFood();
-		GenerateBarriers();
-		GenerateJumpPads();
-		GenerateTurboBoosts();
+		if ((NR_BARRIERS + NR_JUMP_PADS + NR_FOOD + NR_TURBO_BOOSTS) > GridSize.GRID_HEIGHT * GridSize.GRID_WIDTH)
+			throw new IllegalArgumentException();
+
+		synchronized (gameboard) {
+			GenerateBoard();
+			GenerateFood();
+			GenerateBarriers();
+			GenerateJumpPads();
+			GenerateTurboBoosts();
+		}
+		setupButtons();
 	}
 
-	private void GenerateTurboBoosts() {
-		for (int i = 0; i != NR_TURBO_BOOSTS; i++) {
-			Cell tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random
-					.nextInt(GridSize.GRID_HEIGHT)];
-			if (!tmp.hasElements()) {
-				turbo_boosts[i] = tmp;
-				turbo_boosts[i].setTurbo_boost(true);
-			} else {
-				i--;
-			}
+	private synchronized void GenerateTurboBoosts() {
+		for (int i = 0; i < NR_TURBO_BOOSTS; i++) {
+			Cell tmp;
+			do {
+				tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random.nextInt(GridSize.GRID_HEIGHT)];
+			} while (tmp.hasElements());
+			turbo_boosts[i] = tmp;
+			turbo_boosts[i].setTurbo_boost(true);
 		}
 	}
 
-	private void GenerateJumpPads() {
-		for (int i = 0; i != NR_JUMP_PADS; i++) {
-			Cell tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random
-					.nextInt(GridSize.GRID_HEIGHT)];
-			if (!tmp.hasElements()) {
-				jump_pads[i] = tmp;
-				jump_pads[i].setJump_pad(true);
-			} else {
-				i--;
-			}
+	private synchronized void GenerateJumpPads() {
+		for (int i = 0; i < NR_JUMP_PADS; i++) {
+			Cell tmp;
+			do {
+				tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random.nextInt(GridSize.GRID_HEIGHT)];
+			} while (tmp.hasElements());
+			jump_pads[i] = tmp;
+			jump_pads[i].setJump_pad(true);
 		}
 	}
 
-	private void GenerateBoard() {
+	private synchronized void GenerateBoard() {
 		for (int i = 0; i != GridSize.GRID_WIDTH; i++) {
 			for (int j = 0; j != GridSize.GRID_HEIGHT; j++) {
 				gameboard[i][j] = new Cell(i, j);
@@ -78,41 +85,112 @@ public class Board extends JLabel implements Observer {
 
 	}
 
-	private void GenerateBarriers() {
-		for (int i = 0; i != NR_BARRIERS; i++) {
-			Cell tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random
-					.nextInt(GridSize.GRID_HEIGHT)];
-			if (!tmp.hasElements()) {
-				barriers[i] = tmp;
-				barriers[i].setBarrier(true);
-			} else {
-				i--;
-			}
+	private synchronized void GenerateBarriers() {
+		for (int i = 0; i < NR_BARRIERS; i++) {
+			Cell tmp;
+			do {
+				tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random.nextInt(GridSize.GRID_HEIGHT)];
+			} while (tmp.hasElements());
+			barriers[i] = tmp;
+			barriers[i].setBarrier(true);
 		}
 	}
 
-	private void GenerateFood() {
-		for (int i = 0; i != NR_FOOD; i++) {
-			Cell tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random
-					.nextInt(GridSize.GRID_HEIGHT)];
-			if (!tmp.hasElements()) {
-				food[i] = tmp;
-				food[i].setFood(true);
-			} else {
-				i--;
-			}
+	private synchronized void GenerateFood() {
+		for (int i = 0; i < NR_FOOD; i++) {
+			Cell tmp;
+			do {
+				tmp = gameboard[random.nextInt(GridSize.GRID_WIDTH)][random.nextInt(GridSize.GRID_HEIGHT)];
+			} while (tmp.hasElements());
+			food[i] = tmp;
+			food[i].setFood(true);
 		}
 	}
+
+	private void setupButtons() {
+		startButton = new JButton("Start");
+		pauseButton = new JButton("Pause");
+		resumeButton = new JButton("Resume");
+
+		startButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				startGame();
+			}
+		});
+
+		pauseButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				pauseGame();
+			}
+		});
+
+		resumeButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				resumeGame();
+			}
+		});
+
+		add(startButton);
+		add(pauseButton);
+		add(resumeButton);
+	}
+
+	private void startGame() {
+		if (!gameRunning) {
+			for (Snake snake : SnakeApp.getApp().snakes) {
+				snakes.add(snake);
+				new Thread(snake).start();
+			}
+			gameRunning = true;
+		}
+	}
+
+	private void pauseGame() {
+		isPaused = true;
+		for (Snake snake : snakes) {
+			snake.pauseSnake();
+		}
+		displayGameStats();
+	}
+
+	private void resumeGame() {
+		isPaused = false;
+		for (Snake snake : snakes) {
+			snake.resumeSnake();
+		}
+	}
+
+	private void displayGameStats() {
+		Snake longestSnake = snakes.get(0);
+		Snake worstSnake = snakes.get(0);
+
+		for (Snake snake : snakes) {
+			if (snake.getBody().size() > longestSnake.getBody().size()) {
+				longestSnake = snake;
+			}
+			if (snake.isSnakeEnd() && !worstSnake.isSnakeEnd()) {
+				worstSnake = snake;
+			}
+		}
+		System.out.println("Longest Snake: " + longestSnake.getIdt());
+		System.out.println("Worst Snake (first to die): " + worstSnake.getIdt());
+	}
+
 
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 
-		drawGrid(g);
-		drawSnake(g);
-		drawFood(g);
-		drawBarriers(g);
-		drawJumpPads(g);
-		drawTurboBoosts(g);
+		synchronized (gameboard){
+			drawGrid(g);
+			drawSnake(g);
+			drawFood(g);
+			drawBarriers(g);
+			drawJumpPads(g);
+			drawTurboBoosts(g);
+		}
 	}
 
 	private void drawTurboBoosts(Graphics g) {
@@ -131,7 +209,7 @@ public class Board extends JLabel implements Observer {
 
 	private void drawJumpPads(Graphics g) {
 		Image jump = null;
-                
+
                 InputStream resource=ClassLoader.getSystemResourceAsStream("Img/up.png");
 
                 try {
@@ -148,7 +226,7 @@ public class Board extends JLabel implements Observer {
 	private void drawBarriers(Graphics g) {
 
 		Image firewall = null;
-                
+
                 InputStream resource=ClassLoader.getSystemResourceAsStream("Img/firewall.png");
 
                 try {
@@ -168,7 +246,7 @@ public class Board extends JLabel implements Observer {
 	private void drawFood(Graphics g) {
 		Image mouse = null;
                 InputStream resource=ClassLoader.getSystemResourceAsStream("Img/mouse.png");
-		
+
 		try {
 			mouse = ImageIO.read(resource);
 		} catch (IOException e) {

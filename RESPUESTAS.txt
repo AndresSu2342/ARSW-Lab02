@@ -1,0 +1,54 @@
+Autores: Joan Acevedo - Cesar Borray
+
+Parte II
+
+Ejercicio
+
+1. Código analizado! 😊
+
+2. Problemas identificados:
+
+    2.1 Posibles condiciones de carrera:
+
+    - La variable Board.gameboard representa el tablero u se accede en múltiples partes del código sin sincronización,
+    en caso de que múltiples serpientes intentaran actualizar la misma celda simultáneamente, se podrían generar
+    inconsistencias en el estado del tablero.
+    - En checkIfFood(), la comida se verifica y actualiza sin protección contra accesos concurrentes, si múltiples
+    hilos intentaran modificar Board.food[i] al mismo tiempo, se puede sobrescribir información inesperadamente.
+
+    2.2 Uso inadecuado de colecciones:
+
+    - snakeBody al ser una LinkedList, no es segura para el acceso concurrente, si otro hilo intenta leer o modificar
+    snakeBody en el mismo instante, podría generar una excepción de concurrencia.
+
+    2.3 Uso innecesario de esperas activas:
+
+    - Thread.sleep(500) hace que el hilo se detenga por un tiempo fijo, sin considerar la carga del sistema o la
+    necesidad real de la pausa, en caso de que el sistema se sobrecargue, la interfaz se podría volver lenta.
+
+3. Solución a los problemas identificados:
+
+    2.1 Solución a posibles condiciones de carrera:
+
+    - Para solucionar el problema con la variable gameboard, utilizaremos el synchronized en los métodos que la
+    consultan o la modifican. Esto evitará problemas de concurrencia cuando multiples hilos intenten leer y escribir
+    en la matriz al mismo tiempo.
+
+    Los métodos en los que se usó synchronized fueron "GenerateBoard()", "GenerateFood()", "GenerateBarriers()",
+    "GenerateJumpPads()", "GenerateTurboBoosts()", "paintComponent" y en su constructor.
+
+    2.2 Solución a uso inadecuado de colecciones:
+
+    - Primero que nada, hicimos que el método "snakeCalc" fuera synchronized para evitar problemas de concurrencia y asi
+    asegurarnos que solo un hilo pueda modificar "snakeBody" a la vez.
+
+    Posteriormente, cambiamos el método ".peekLast" por ".pollLast", al hacer esto se elimina y se devuelve la última
+    celda en una sola operación atómica, evitando posibles errores de concurrencia.
+
+    2.3 Solución a uso innecesario de esperas activas:
+
+    - Para aprovechar la posibilidad de liberar el hilo de manera más óptima, procedemos a cambiar el
+    "Thread.sleep(500)" por un "wait()" y un "notify".
+
+    Para ello procedemos a crear un objeto tipo Object llamado "lock" el cual se va a usar para el synchronized que
+    pondremos dentro de run(), posteriormente cambiamos el "Thread.sleep(500)" por un "lock.wait(500)".

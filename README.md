@@ -1,71 +1,54 @@
-### Escuela Colombiana de Ingeniería
-## Arquitecturas de Software - ARSW
+## Escuela Colombiana de Ingeniería
 
-#### Laboratorio - Programación concurrente, condiciones de carrera, esquemas de sincronización, colecciones sincronizadas y concurrentes.
+---
 
-Ejercicio inividual o en parejas.
+### Arquitecturas de Software
+### Laboratorio - Programación concurrente, condiciones de carrera, esquemas de sincronización, colecciones sincronizadas y concurrentes
 
-### Part I
+---
 
+### Joan Acevedo - Cesar Borray
 
-Parte I – Antes de terminar la clase.
+---
 
-Control de hilos con [wait/notify.](http://howtodoinjava.com/core-java/multi-threading/how-to-work-with-wait-notify-and-notifyall-in-java/)
+**Part I Control de hilos con wait/notify**
 
-1.  Descargue el proyecto
-    [*PrimeFinder*](https://github.com/ARSW-ECI/wait-notify-excercise).
-    Este es un programa que calcula números primos entre 0 y M
-    (Control.MAXVALUE), concurrentemente, distribuyendo la búsqueda de
-    los mismos entre n (Control.NTHREADS) hilos independientes.
+1. Se descargó, analizó el proyecto PrimeFinder y lo alojamos en un repositorio externo el cual se encuentra [*Aqui*](https://github.com/AndresSu2342/ARSW-PrimeFender). o en el siguiente direccionamiento:
+   
+    https://github.com/AndresSu2342/ARSW-PrimeFender
 
-2.  Se necesita modificar la aplicación de manera que cada t
-    milisegundos de ejecución de los threads, se detengan todos los
-    hilos y se muestre el número de primos encontrados hasta el momento.
-    Luego, se debe esperar a que el usuario presione ENTER para reanudar
-    la ejecución de los mismos. Utilice los mecanismos de sincronización
-    provistos por el lenguaje (wait y notify, notifyAll).
+    El cual calcula números primos en un rango determinado utilizando hilos concurrentes.
 
-Tenga en cuenta:
+2. Se implementó un mecanismo de sincronización para pausar la ejecución de los hilos cada t milisegundos utilizando wait() (por mayor practicidad decidimos usar el sleep()) y notifyAll().
 
--   La construcción synchronized se utiliza para obtener acceso exclusivo a un objeto.
+![Image](https://github.com/user-attachments/assets/78ac43f2-00ac-42dc-af8f-211711d9e265)
 
--   La instrucción A.wait() ejecutada en un hilo B pone en modo suspendido al hilo B (independientemente de qué objeto 'A' sea usado como 'lock'). Para reanudarlo, otro hilo activo puede reanudar a B haciendo 'notify()' al objeto usado como 'lock' (es decir, A).
+![Image](https://github.com/user-attachments/assets/cc4ebde0-37b9-4910-9bce-79ea9fed11e0)
 
--   La instrucción notify(), despierta el primer hilo que hizo wait()
-    sobre el objeto.
+3. Se agregó la funcionalidad de mostrar los números primos encontrados hasta el momento antes de suspender los hilos.
 
--   La instrucción notifyAll(), despierta todos los hilos que estan
-    esperando por el objeto (hicieron wait()sobre el objeto).
+![Image](https://github.com/user-attachments/assets/6539e643-138a-48c7-8501-b97cf1d7709a)
 
+4. Se modificó la lógica para que el programa espere la entrada del usuario (ENTER) para reanudar la ejecución de los hilos.
 
-### Parte II
+![Image](https://github.com/user-attachments/assets/3b211947-72c6-496c-8879-e51a77d78427)
 
-SnakeRace es una versión autónoma, multi-serpiente del famoso juego 'snake', basado en el proyecto de João Andrade -este ejercicio es un 'fork' del mismo-. En este juego:
-	
-- N serpientes funcionan de manera autónoma.
-- No existe el concepto de colisión entre las mismas. La única forma de que mueran es estrellándose contra un muro.
-- Hay ratones distribuídos a lo largo del juego. Como en el juego clásico, cada vez que una serpiente se come a un ratón, ésta crece.
-- Existen unos puntos (flechas rojas) que teletransportan a las serpientes.
-- Los rayos hacen que la serpiente aumente su velocidad.
+---
 
-![](img/sshot.png)
+**Parte II - SnakeRace**
 
-Ejercicio
+1. **Análisis del código** Se revisó la estructura del juego para comprender el uso de hilos en el movimiento autónomo de las serpientes.
 
-1. Analice el código para entender cómo hace uso de hilos para crear un comportamiento autónomo de las N serpientes.
+2 y 3. **Identificación de problemas de concurrencia y soluciones implementadas:** Todo el detalle de estos dos puntos se encuentran en el archivo RESPUESTAS.txt
+   
+4. **Mejoras en la interfaz del juego:**    
 
-2. De acuerdo con lo anterior, y con la lógica del juego, identifique y escriba claramente (archivo RESPUESTAS.txt):
-    - Posibles condiciones de carrera.
-    - Uso inadecuado de colecciones, considerando su manejo concurrente (para esto, aumente la velocidad del juego y ejecútelo varias veces hasta que se genere un error).
-    - Uso innecesario de esperas activas.
+   - Se agregó la opción de Iniciar/Pausar/Reanudar el juego mediante botones en la interfaz.
 
-2. Identifique las regiones críticas asociadas a las condiciones de carrera, y haga algo para eliminarlas. Tenga en cuenta que se debe sincronizar estríctamente LO NECESARIO. En su documento de respuestas indique, la solución realizada para cada ítem del punto 2. Igualmente tenga en cuenta que en los siguientes puntos NO se deben agregar más posibles condiciones de carrera.
+![Image](https://github.com/user-attachments/assets/eeb075a9-f26a-4d7b-869b-e00329aec1d0)
 
-3. Como se puede observar, el juego está incompleto. Haga los ajustes necesarios para que a través de botones en la interfaz se pueda Iniciar/Pausar/Reanudar el juego: iniciar el juego no se ha iniciado aún, suspender el juego si está en ejecución, reactivar el juego si está suspendido. Para esto tenga en cuenta:
-    * Al pausar (suspender) el juego, en alguna parte de la interfaz (agregue los componentes que desee) se debe mostrar:
-        - La serpiente viva más larga.
-        - La peor serpiente: la que primero murió.
-    
-        Recuerde que la suspensión de las serpientes NO es instantánea, y que se debe garantizar que se muestre información consistente.
-    
+![Image](https://github.com/user-attachments/assets/1b1d7a4d-7b2f-4552-8b18-0b6cafb1a90b)   
 
+   - Se mostró información sobre la serpiente más larga y la primera en morir al pausar el juego.
+
+![Image](https://github.com/user-attachments/assets/8dbd56a7-e233-4329-95b0-f9bc7f722e70)
